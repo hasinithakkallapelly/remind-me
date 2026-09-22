@@ -1,0 +1,29 @@
+name: RemindMe
+options:
+  bundleIdPrefix: com.hasini
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+targets:
+  RemindMe:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: RemindMe
+    info:
+      path: Generated/Info.plist
+      properties:
+        UILaunchScreen: {}
+        NSLocationWhenInUseUsageDescription: "Remind Me uses your location to notify you about reminders near places you've saved."
+        NSLocationAlwaysAndWhenInUseUsageDescription: "Remind Me needs background location access so it can remind you about saved places even when the app isn't open."
+        UIBackgroundModes:
+          - location
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hasini.remindme
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        GENERATE_INFOPLIST_FILE: YES
