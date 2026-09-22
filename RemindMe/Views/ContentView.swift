@@ -13,17 +13,27 @@ struct ContentView: View {
     @State private var isPresentingSettings = false
 
     var body: some View {
-        NavigationStack {
-            PlacesListView(places: places)
-                .navigationTitle("Remind Me")
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button {
-                            isPresentingSettings = true
-                        } label: {
-                            Image(systemName: "gearshape")
+        TabView {
+            NavigationStack {
+                PlacesListView(places: places)
+                    .navigationTitle("Remind Me")
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button {
+                                isPresentingSettings = true
+                            } label: {
+                                Image(systemName: "gearshape")
+                            }
                         }
                     }
+            }
+            .tabItem {
+                Label("Places", systemImage: "list.bullet")
+            }
+
+            PlacesMapView(places: places)
+                .tabItem {
+                    Label("Map", systemImage: "map")
                 }
         }
         .environmentObject(locationManager)

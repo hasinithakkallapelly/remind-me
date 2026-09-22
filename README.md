@@ -31,6 +31,13 @@ open.
   recomputed and rescheduled whenever the app is opened or a geofence fires
   — so it stays accurate as long as you interact with the app or pass a
   saved place at some point during the day.
+- **Map tab**: every saved place shows as a colored bubble on a map, with
+  the count of its not-yet-completed reminders inside — red if something's
+  overdue, orange if something's due today/tomorrow, blue if there's open
+  reminders with no near-term due date, gray if there's nothing open. The
+  bubbles are fixed-size screen overlays, not geo-scaled shapes, so they
+  stay legible when you zoom out to see everything at once. Tap one to jump
+  to that place's reminders.
 
 ## Project layout
 
@@ -46,8 +53,9 @@ RemindMe/
     DigestManager.swift        # Computes and (re)schedules the daily summary
     DigestSettings.swift       # Shared UserDefaults keys for the digest time
   Views/
-    ContentView.swift
+    ContentView.swift          # Tab bar: Places list + Map
     PlacesListView.swift
+    PlacesMapView.swift        # All places as bubbles on one map
     AddEditPlaceView.swift     # Map picker + radius slider
     PlaceDetailView.swift      # Reminders list + linked-places toggles
     AddReminderView.swift      # Reminder text + optional due date
@@ -98,5 +106,7 @@ radius.
 - Repeated geofence entries fire a fresh notification each time, so
   standing right at the edge of a geofence boundary could, in principle,
   trigger a burst of duplicate notifications for the same reminder.
+- The map view doesn't cluster overlapping bubbles — if you save several
+  places close together, their labels can overlap at low zoom.
 
 These are natural next additions once the core loop is working end to end.
