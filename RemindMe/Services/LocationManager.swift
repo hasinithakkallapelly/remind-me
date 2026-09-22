@@ -87,12 +87,14 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
 
         lastEnteredPlaceName = place.name
 
-        var remindersToFire = place.reminders.filter { $0.isActive }
+        // Not-yet-completed reminders fire every time this geofence is
+        // entered, and keep firing on future entries until marked done.
+        var remindersToFire = place.reminders.filter { !$0.isCompleted }
 
         for linkedID in place.linkedPlaceIDs {
             let linkedDescriptor = FetchDescriptor<Place>(predicate: #Predicate { $0.id == linkedID })
             if let linkedPlace = try? context.fetch(linkedDescriptor).first {
-                remindersToFire += linkedPlace.reminders.filter { $0.isActive }
+                remindersToFire += linkedPlace.reminders.filter { !$0.isCompleted }
             }
         }
 
@@ -111,5 +113,11 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
                 identifier: "\(placeID.uuidString)-generic"
             )
         }
+
+        DigestManager.refreshSchedule(
+            context: context,
+            hour: UserDefaults.standard.integer(forKey: DigestSettings.hourKey),
+            minute: UserDefaults.standard.integer(forKey: DigestSettings.minuteKey)
+        )
     }
 }

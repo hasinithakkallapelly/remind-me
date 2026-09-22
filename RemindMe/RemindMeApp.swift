@@ -3,6 +3,10 @@ import SwiftData
 
 @main
 struct RemindMeApp: App {
+    init() {
+        DigestSettings.registerDefaults()
+    }
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([Place.self, Reminder.self])
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)

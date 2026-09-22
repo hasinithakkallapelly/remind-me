@@ -6,7 +6,7 @@ struct PlaceDetailView: View {
     @Bindable var place: Place
     let allPlaces: [Place]
 
-    @State private var newReminderText = ""
+    @State private var isPresentingAddReminder = false
     @State private var isPresentingEdit = false
 
     private var otherPlaces: [Place] {
@@ -21,20 +21,14 @@ struct PlaceDetailView: View {
                         .foregroundStyle(.secondary)
                 }
                 ForEach(place.reminders.sorted(by: { $0.createdAt < $1.createdAt })) { reminder in
-                    Toggle(isOn: Binding(
-                        get: { reminder.isActive },
-                        set: { reminder.isActive = $0 }
-                    )) {
-                        Text(reminder.text)
-                            .strikethrough(!reminder.isActive)
-                    }
+                    reminderRow(reminder)
                 }
                 .onDelete(perform: deleteReminders)
 
-                HStack {
-                    TextField("Add a reminder…", text: $newReminderText)
-                    Button("Add") { addReminder() }
-                        .disabled(newReminderText.trimmingCharacters(in: .whitespaces).isEmpty)
+                Button {
+                    isPresentingAddReminder = true
+                } label: {
+                    Label("Add Reminder", systemImage: "plus")
                 }
             }
 
@@ -71,17 +65,56 @@ struct PlaceDetailView: View {
         }
         .navigationTitle(place.name)
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isPresentingAddReminder) {
+            AddReminderView(place: place)
+        }
         .sheet(isPresented: $isPresentingEdit) {
             AddEditPlaceView(placeToEdit: place)
         }
     }
 
-    private func addReminder() {
-        let text = newReminderText.trimmingCharacters(in: .whitespaces)
-        guard !text.isEmpty else { return }
-        let reminder = Reminder(text: text, place: place)
-        modelContext.insert(reminder)
-        newReminderText = ""
+    @ViewBuilder
+    private func reminderRow(_ reminder: Reminder) -> some View {
+        Button {
+            toggleCompleted(reminder)
+        } label: {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: reminder.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(reminder.isCompleted ? .green : .secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(reminder.text)
+                        .strikethrough(reminder.isCompleted)
+                        .foregroundStyle(reminder.isCompleted ? .secondary : .primary)
+                    if let dueDate = reminder.dueDate {
+                        Text("Due \(dueDate.formatted(date: .abbreviated, time: .omitted))")
+                            .font(.caption)
+                            .foregroundStyle(dueDateColor(dueDate, isCompleted: reminder.isCompleted))
+                    }
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func dueDateColor(_ dueDate: Date, isCompleted: Bool) -> Color {
+        guard !isCompleted else { return .secondary }
+        let calendar = Calendar.current
+        if dueDate < calendar.startOfDay(for: Date()) {
+            return .red
+        } else if calendar.isDateInToday(dueDate) || calendar.isDateInTomorrow(dueDate) {
+            return .orange
+        }
+        return .secondary
+    }
+
+    private func toggleCompleted(_ reminder: Reminder) {
+        reminder.isCompleted.toggle()
+        reminder.completedAt = reminder.isCompleted ? Date() : nil
+        DigestManager.refreshSchedule(
+            context: modelContext,
+            hour: UserDefaults.standard.integer(forKey: DigestSettings.hourKey),
+            minute: UserDefaults.standard.integer(forKey: DigestSettings.minuteKey)
+        )
     }
 
     private func deleteReminders(at offsets: IndexSet) {
